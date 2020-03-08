@@ -14,13 +14,8 @@ class Request {
   }
 
   async getTasks() {
-    let tasks = [];
-    await this._call(this.restBase + 'tasks', 'GET').then(
-      (response) => {
-        tasks = response.data;
-      }
-    );
-    return tasks;
+    const response = await this._call(this.restBase + 'tasks', 'GET');
+    return response.data;
   }
 
   async createTask(Task) {
@@ -28,24 +23,24 @@ class Request {
     console.log(Task);
     let Spinner = CLI.Spinner;
     let waitingSpinner = new Spinner('Adding task...');
-    
+
     waitingSpinner.start();
     let jsonBody = JSON.stringify(Task, (key, value) => {
       if (value !== null) return value;
     });
-    await this._call(this.restBase + 'tasks', 'POST', jsonBody, {
-      "X-Request-Id": uuid.v4()
-    } ).then((response) => {
+    try {
+      const response = await this._call(this.restBase + 'tasks', 'POST', jsonBody, {
+        "X-Request-Id": uuid.v4()
+      })
       console.log();
       console.log(chalk.green('Task created with id: ' + response.data.id));
       console.log(chalk.yellow(response.data.url));
       console.log();
-      waitingSpinner.stop();
-    }, (error) => {
+    } catch (error) {
       console.log(error);
-    });
+    }
+    waitingSpinner.stop();
 
-    
   }
 
   _call(url, method, params, headers) {
@@ -54,11 +49,11 @@ class Request {
       'Content-Type': 'application/json'
     };
 
-    console.log({...headersDeftault, ...headers});
+    console.log({ ...headersDeftault, ...headers });
     return axios({
       url: url,
       method: method,
-      headers: {...headersDeftault, ...headers},
+      headers: { ...headersDeftault, ...headers },
       data: params
     })
   }
